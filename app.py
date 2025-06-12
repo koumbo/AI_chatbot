@@ -25,14 +25,12 @@ input_mode = st.radio("Choose input mode:", ["Text", "Voice (Web)"])
 user_input = ""
 # Handle input based on mode
 if input_mode == "Voice (Web)":
-    st.write("Click the mic button to speak")
-    voice_input()  # Triggers the browser mic
+    st.write("Click the mic button to speak:")
+    user_input = voice_input()
 
-    # Read value returned from the component
-    user_input = st.session_state.get("voice") or ""
-
-else:
-    user_input = st.text_input("You:", "")
+    # Workaround: component sets user_input via session state
+    if "voice" in st.session_state and st.session_state["voice"]:
+        user_input = st.session_state["voice"]
 
 # Process input
 if user_input and isinstance(user_input, str):

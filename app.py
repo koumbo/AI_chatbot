@@ -31,6 +31,10 @@ if input_mode == "Voice (Web)":
     # Workaround: component sets user_input via session state
     if "voice" in st.session_state and st.session_state["voice"]:
         user_input = st.session_state["voice"]
+    st.session_state["voice"] = None  # Reset after use
+
+else:
+    user_input = st.text_input("You:", "")
 
 # Process input
 if user_input and isinstance(user_input, str):

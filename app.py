@@ -1,7 +1,7 @@
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
-from voice_io_component import voice_io
+from voice_input_component import voice_io
 
 st.set_page_config(page_title="Voice Chatbot", page_icon="🎙️")
 

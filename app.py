@@ -1,3 +1,9 @@
+import os
+
+# This line tells Streamlit not to watch torch directory (which causes issues)
+os.environ["STREAMLIT_WATCHDOG_IGNORE_DIRECTORIES"] = "/home/appuser/venv/lib/python3.9/site-packages/torch"
+
+
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch

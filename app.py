@@ -1,9 +1,11 @@
 import streamlit as st
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
-from voice_input_component import voice_input  # our custom component
+from voice_io_component import voice_io
 
-st.title("🎙️ DailyDialog Voice Chatbot (Web-based)")
+st.set_page_config(page_title="Voice Chatbot", page_icon="🎙️")
+
+st.title("🤖 Voice Chatbot with Input + Output")
 
 # Load model
 @st.cache_resource
@@ -14,50 +16,47 @@ def load_model():
 
 tokenizer, model = load_model()
 
-# Chat history
+# Initialize state
 if "history" not in st.session_state:
     st.session_state.history = None
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Choose input mode
-input_mode = st.radio("Choose input mode:", ["Text", "Voice (Web)"])
-user_input = ""
-# Handle input based on mode
-if input_mode == "Voice (Web)":
-    st.write("Click the mic button to speak:")
-    user_input = voice_input()
+# Select input method
+mode = st.radio("Choose input mode:", ["Text", "Voice (Browser)"])
 
-    # Workaround: component sets user_input via session state
-    if "voice" in st.session_state and st.session_state["voice"]:
-        user_input = st.session_state["voice"]
-    st.session_state["voice"] = None  # Reset after use
-
-else:
+if mode == "Text":
     user_input = st.text_input("You:", "")
+else:
+    # Call component, pass last bot message to read aloud
+    last_bot_msg = ""
+    for role, msg in reversed(st.session_state.messages):
+        if role == "Bot":
+            last_bot_msg = msg
+            break
 
-# Process input
-if user_input and isinstance(user_input, str):
+    user_input = voice_io(prompt_to_speak=last_bot_msg)
+
+# Only respond if input exists
+if user_input and isinstance(user_input, str) and user_input.strip():
     input_ids = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
-    bot_input_ids = (
-        torch.cat([st.session_state.history, input_ids], dim=-1)
-        if st.session_state.history is not None else input_ids
-    )
+    bot_input_ids = torch.cat([st.session_state.history, input_ids], dim=-1) if st.session_state.history is not None else input_ids
 
     st.session_state.history = model.generate(
-        bot_input_ids,
-        max_length=1000,
-        pad_token_id=tokenizer.eos_token_id
+        bot_input_ids, max_length=1000, pad_token_id=tokenizer.eos_token_id
     )
 
-    output = tokenizer.decode(
+    response = tokenizer.decode(
         st.session_state.history[:, bot_input_ids.shape[-1]:][0],
         skip_special_tokens=True
     )
 
     st.session_state.messages.append(("You", user_input))
-    st.session_state.messages.append(("Bot", output))
+    st.session_state.messages.append(("Bot", response))
 
-# Show messages
-for role, msg in st.session_state.messages:
-    st.markdown(f"**{role}:** {msg}")
+# Display full chat history
+for speaker, message in st.session_state.messages:
+    if speaker == "You":
+        st.markdown(f"🧑 **You:** {message}")
+    else:
+        st.markdown(f"🤖 **Bot:** {message}")

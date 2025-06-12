@@ -1,38 +1,37 @@
 import streamlit.components.v1 as components
 
 def voice_input():
-    component = components.html(
+    return components.html(
         """
-        <html>
-        <body>
-            <button onclick="startRecognition()">🎤 Speak</button>
-            <p id="output" style="font-weight: bold;"></p>
+        <script>
+        const streamlitInput = window.parent;
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-            <script>
-                const output = document.getElementById("output");
+        function startRecognition() {
+            recognition.start();
+            document.getElementById('status').innerText = "🎤 Listening...";
+        }
 
-                function startRecognition() {
-                    const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
-                    recognition.lang = 'en-US';
-                    recognition.interimResults = false;
-                    recognition.maxAlternatives = 1;
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('status').innerText = "✅ " + transcript;
+            streamlitInput.postMessage(
+                { type: 'STREAMLIT:SET_COMPONENT_VALUE', value: transcript },
+                '*'
+            );
+        }
 
-                    recognition.onresult = function(event) {
-                        const text = event.results[0][0].transcript;
-                        output.innerText = text;
-                        window.parent.postMessage({type: 'STREAMLIT:SET_COMPONENT_VALUE', value: text}, '*');
-                    };
+        recognition.onerror = function(event) {
+            document.getElementById('status').innerText = "❌ Error: " + event.error;
+        }
 
-                    recognition.onerror = function(event) {
-                        output.innerText = "Error: " + event.error;
-                    };
-
-                    recognition.start();
-                }
-            </script>
-        </body>
-        </html>
+        </script>
+        <button onclick="startRecognition()">🎙️ Speak</button>
+        <p id="status">Click the mic and speak</p>
         """,
-        height=150,
+        height=180,
+        key="voice"
     )
-    return component

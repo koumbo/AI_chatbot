@@ -1,13 +1,12 @@
+
 import os
-
-# This line tells Streamlit not to watch torch directory (which causes issues)
-os.environ["STREAMLIT_WATCHDOG_IGNORE_DIRECTORIES"] = "/home/appuser/venv/lib/python3.9/site-packages/torch"
-
+os.environ["STREAMLIT_WATCHDOG_IGNORE_DIRECTORIES"] = "/home/adminuser/venv/lib/python3.13/site-packages/torch"
 
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from voice_input_component import voice_io
+
 
 st.set_page_config(page_title="Voice Chatbot", page_icon="🎙️")
 
@@ -16,7 +15,7 @@ st.title("🤖 Voice Chatbot with Input + Output")
 # Load model
 @st.cache_resource
 def load_model():
-    tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
+    tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium", padding_side="left")
     model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium")
     return tokenizer, model
 

@@ -1,0 +1,2 @@
+[server]
+folderWatchBlacklist = ["/home/adminuser/venv/lib/python3.13/site-packages/torch"]
